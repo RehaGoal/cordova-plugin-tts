@@ -60,6 +60,14 @@ public class TTS extends CordovaPlugin implements OnInitListener {
             }
 
             @Override
+            public void onStop(String callbackId, boolean interrupted) {
+                if (!callbackId.equals("")) {
+                    CallbackContext context = new CallbackContext(callbackId, webView);
+                    context.success();
+                }
+            }
+
+            @Override
             public void onDone(String callbackId) {
                 if (!callbackId.equals("")) {
                     CallbackContext context = new CallbackContext(callbackId, webView);
@@ -112,6 +120,7 @@ public class TTS extends CordovaPlugin implements OnInitListener {
     private void stop(JSONArray args, CallbackContext callbackContext)
       throws JSONException, NullPointerException {
         tts.stop();
+        callbackContext.success();
     }
 
     private void callInstallTtsActivity(JSONArray args, CallbackContext callbackContext)
@@ -124,9 +133,11 @@ public class TTS extends CordovaPlugin implements OnInitListener {
 
         if( resolveInfo == null ) {
            // Not able to find the activity which should be started for this intent
+          callbackContext.error(ERR_UNKNOWN);
         } else {
           installIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
           context.startActivity(installIntent);
+          callbackContext.success();
         }
     }
 
@@ -195,12 +206,7 @@ public class TTS extends CordovaPlugin implements OnInitListener {
 
         String[] localeArgs = locale.split("-");
         tts.setLanguage(new Locale(localeArgs[0], localeArgs[1]));
-
-        if (Build.VERSION.SDK_INT >= 27) {
-            tts.setSpeechRate((float) rate * 0.7f);
-        } else {
-            tts.setSpeechRate((float) rate);
-        }
+        tts.setSpeechRate((float) rate);
 
         tts.speak(text, TextToSpeech.QUEUE_FLUSH, ttsParams);
     }
